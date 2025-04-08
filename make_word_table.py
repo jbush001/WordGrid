@@ -17,7 +17,7 @@
 # Usage: python3 make_word_table.py > words.json
 
 print('[')
-with open('words.txt') as f:
+with open('/usr/share/dict/words') as f:
     for line in f:
         cleaned = line.strip().upper()
         if len(cleaned) < 3:
