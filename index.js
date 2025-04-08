@@ -3,14 +3,19 @@
 let canvas = null;
 let context = null;
 
-const TILE_STRIDE = 48; // Distance between consecutive edges
-const TILE_SIZE = 34;
-const TILE_HIGHLIGHT_SIZE = 24;
+const TILE_STRIDE = 55; // Distance between consecutive edges
+const TILE_SIZE = 40;
+const TILE_HIGHLIGHT_SIZE = 30;
 const BRIDGE_WIDTH = 10;
-const RADIUS = 6;
+const RADIUS = 8;
 const MARGIN = 10; // Where the game board starts
 const NUM_ROWS = 8;
 const NUM_COLS = 8;
+const BACKGROUND_COLOR = "#a1abf8";
+const TILE_COLOR = "#e8e8e8";
+const HIGHLIGHT_COLOR = "#9097cf";
+const LINE_COLOR = "#000000"
+
 
 let mouseIsDown = false;
 let highlightList = [];
@@ -36,7 +41,7 @@ window.onload = function() {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
     context = canvas.getContext("2d");
-    canvas.style.backgroundColor = "lightblue";
+    canvas.style.backgroundColor = BACKGROUND_COLOR;
 
     canvas.onmousedown = handleMouseDown;
     canvas.onmousemove = handleMouseMove;
@@ -277,9 +282,9 @@ function draw() {
 }
 
 function drawGrid() {
-    context.strokeStyle = "black";
+    context.strokeStyle = LINE_COLOR;
     context.lineWidth = 1;
-    context.fillStyle = "blue";
+    context.fillStyle = TILE_COLOR;
 
     const GAP = (TILE_STRIDE - TILE_SIZE) / 2;
     for (let row = 0; row < NUM_ROWS; row++) {
@@ -298,7 +303,7 @@ function drawGrid() {
 
 function drawLetters() {
     context.font = "20px serif";
-    context.fillStyle = "black";
+    context.fillStyle = LINE_COLOR;
     for (let row = 0; row < NUM_ROWS; row++) {
         for (let col = 0; col < NUM_COLS; col++) {
             const letter = getLetterAt(row, col);
@@ -320,9 +325,9 @@ function drawCurrentWord() {
 function drawTileHighlightList(coords) {
     let lastLoc = null;
 
-    context.strokeStyle = "black";
+    context.strokeStyle = LINE_COLOR;
     context.lineWidth = 1;
-    context.fillStyle = "#8888ee";
+    context.fillStyle = HIGHLIGHT_COLOR;
     const GAP = TILE_STRIDE - TILE_HIGHLIGHT_SIZE;
 
     for (let index = 0; index < coords.length; index++) {
