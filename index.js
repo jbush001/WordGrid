@@ -110,8 +110,9 @@ function locationToColRow(x, y) {
 
 function handleSwipe(x, y) {
     const gridLoc = locationToColRow(x, y);
-    if (!gridLoc)
+    if (!gridLoc || getLetterAt(gridLoc[1], gridLoc[0]) == " ") {
         return;
+    }
 
     if ((gridLoc in highlightedCells)) {
         // Check if we are undoing the last move
@@ -127,7 +128,7 @@ function handleSwipe(x, y) {
         // Add new cell
         highlightedCells[gridLoc] = true;
         highlightList.push(gridLoc);
-        currentWord = currentWord + gridContents[gridLoc[0] * NUM_COLS + gridLoc[1]];
+        currentWord = currentWord + getLetterAt(gridLoc[1], gridLoc[0]);
         draw();
     }
 }
@@ -149,11 +150,52 @@ function handleMouseMove(event) {
 
 function handleMouseUp(event) {
     mouseIsDown = false;
+    removeCurrentHighlight();
+    compressTiles();
     highlightedCells = {};
     highlightList = [];
     currentWord = "";
 
     draw();
+}
+
+function getLetterAt(row, col) {
+    return gridContents[row * NUM_COLS + col];
+}
+
+function removeCurrentHighlight() {
+    for (let index = 0; index < highlightList.length; index++) {
+        const [col, row] = highlightList[index];
+        gridContents[row * NUM_COLS + col] = " ";
+    }
+}
+
+function compressTiles() {
+    for (let col = 0; col < NUM_COLS; col++) {
+        let srcRow = NUM_ROWS - 1;
+        let destRow = srcRow;
+        while (srcRow >= 0) {
+            const val = getLetterAt(srcRow, col);
+            if (val == " ") {
+                console.log("blank");
+            }
+
+            if (val != " ") {
+                if (srcRow != destRow) {
+                    console.log("copy", col, srcRow, destRow, val);
+                    gridContents[destRow * NUM_COLS + col] = val;
+                }
+
+                destRow--;
+            }
+
+            srcRow--;
+        }
+
+        while (destRow >= 0) {
+            gridContents[destRow-- * NUM_COLS + col] = " ";
+        }
+    }
 }
 
 function draw() {
@@ -176,9 +218,11 @@ function drawGrid() {
             let tileX = col * TILE_STRIDE + MARGIN + GAP;
             let tileY = row * TILE_STRIDE + MARGIN + GAP;
 
-            context.roundRect(tileX, tileY, TILE_SIZE, TILE_SIZE, RADIUS);
-            context.fill();
-            context.stroke();
+            if (getLetterAt(row, col) != " ") {
+                context.roundRect(tileX, tileY, TILE_SIZE, TILE_SIZE, RADIUS);
+                context.fill();
+                context.stroke();
+            }
         }
     }
 }
@@ -188,10 +232,10 @@ function drawLetters() {
     context.fillStyle = "black";
     for (let row = 0; row < NUM_ROWS; row++) {
         for (let col = 0; col < NUM_COLS; col++) {
-            const letter = gridContents[row * NUM_COLS + col];
+            const letter = getLetterAt(row, col);
             context.fillText(letter,
-                row * TILE_STRIDE + MARGIN + TILE_STRIDE / 2 - 8,
-                col * TILE_STRIDE + MARGIN + TILE_STRIDE / 2 + 4);
+                col * TILE_STRIDE + MARGIN + TILE_STRIDE / 2 - 8,
+                row * TILE_STRIDE + MARGIN + TILE_STRIDE / 2 + 4);
         }
     }
 }
