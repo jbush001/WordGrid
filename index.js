@@ -62,9 +62,10 @@ window.onload = function() {
     context = canvas.getContext("2d");
     canvas.style.backgroundColor = BACKGROUND_COLOR;
 
-    canvas.onmousedown = handleMouseDown;
-    canvas.onmousemove = handleMouseMove;
-    canvas.onmouseup = handleMouseUp;
+    document.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("keydown", handleKeyDown);
 
     fetch('words.json')
         .then(response => response.json())
@@ -88,9 +89,7 @@ function resetGrid() {
         gridContents.push(generate_random_letter());
     }
 
-    highlightedCells = {};
-    highlightList = [];
-    currentWord = "";
+    resetSelection();
     lastRoundStart = Date.now();
     draw();
 }
@@ -200,6 +199,20 @@ function handleSwipe(x, y) {
     }
 }
 
+function resetSelection() {
+    highlightedCells = {};
+    highlightList = [];
+    currentWord = "";
+}
+
+function handleKeyDown(event) {
+    console.log("handleKeyDown", event);
+    if (event.key === "Escape") {
+        resetSelection();
+        draw();
+    }
+}
+
 function isAdjacent(coord1, coord2) {
     return Math.abs(coord1[0] - coord2[0]) < 2 && Math.abs(coord1[1] - coord2[1]) < 2;
 }
@@ -226,9 +239,7 @@ function handleMouseUp(event) {
         compressTiles();
     }
 
-    highlightedCells = {};
-    highlightList = [];
-    currentWord = "";
+    resetSelection();
 
     draw();
 }
