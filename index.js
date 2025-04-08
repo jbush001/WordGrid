@@ -163,27 +163,32 @@ function getLetterAt(row, col) {
     return gridContents[row * NUM_COLS + col];
 }
 
+function setLetterAt(row, col, value) {
+    gridContents[row * NUM_COLS + col] = value;
+}
+
 function removeCurrentHighlight() {
     for (let index = 0; index < highlightList.length; index++) {
         const [col, row] = highlightList[index];
-        gridContents[row * NUM_COLS + col] = " ";
+        setLetterAt(row, col, " ");
     }
 }
 
 function compressTiles() {
+    dropTiles();
+    removeEmptyColumns();
+}
+
+function dropTiles() {
     for (let col = 0; col < NUM_COLS; col++) {
         let srcRow = NUM_ROWS - 1;
         let destRow = srcRow;
         while (srcRow >= 0) {
             const val = getLetterAt(srcRow, col);
-            if (val == " ") {
-                console.log("blank");
-            }
-
             if (val != " ") {
                 if (srcRow != destRow) {
                     console.log("copy", col, srcRow, destRow, val);
-                    gridContents[destRow * NUM_COLS + col] = val;
+                    setLetterAt(destRow, col, val);
                 }
 
                 destRow--;
@@ -193,10 +198,74 @@ function compressTiles() {
         }
 
         while (destRow >= 0) {
-            gridContents[destRow-- * NUM_COLS + col] = " ";
+            setLetterAt(destRow--, col, " ");
         }
     }
 }
+
+function removeEmptyColumns() {
+    // Assumes even number of columns
+    let destRight = NUM_COLS / 2;
+    let srcRight = destRight;
+    while (srcRight < NUM_COLS) {
+        console.log("A", srcRight, destRight);
+        if (!isColumnEmpty(srcRight)) {
+            copyColumn(srcRight, destRight);
+            destRight++;
+        }
+
+        srcRight++;
+    }
+
+    while (destRight < NUM_COLS) {
+        clearColumn(destRight);
+        destRight++;
+    }
+
+    let destLeft = NUM_COLS / 2 - 1;
+    let srcLeft = destLeft;
+    while (srcLeft >= 0) {
+        console.log("B", srcLeft, destLeft);
+        if (!isColumnEmpty(srcLeft)) {
+            copyColumn(srcLeft, destLeft);
+            destLeft--;
+        }
+
+        srcLeft--;
+    }
+
+    while (destLeft >= 0) {
+        clearColumn(destLeft);
+        destLeft--;
+    }
+}
+
+function isColumnEmpty(col) {
+    for (let row = 0; row < NUM_ROWS; row++) {
+        if (getLetterAt(row, col) != " ") {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function copyColumn(fromCol, toCol) {
+    if (fromCol == toCol) {
+        return;
+    }
+
+    for (let row = 0; row < NUM_ROWS; row++) {
+        setLetterAt(row, toCol, getLetterAt(row, fromCol));
+    }
+}
+
+function clearColumn(col) {
+    for (let row = 0; row < NUM_ROWS; row++) {
+        setLetterAt(row, col, " ");
+    }
+}
+
 
 function draw() {
     context.clearRect(0, 0, canvas.width, canvas.height);
