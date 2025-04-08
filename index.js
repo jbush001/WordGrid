@@ -12,6 +12,13 @@ const MARGIN = 10; // Where the game board starts
 const NUM_ROWS = 8;
 const NUM_COLS = 8;
 
+let mouseIsDown = false;
+let highlightList = [];
+let highlightedCells = {};
+let currentWord = "";
+let gridContents = [];
+
+
 
 window.onload = function() {
     canvas = document.getElementById("c");
@@ -20,22 +27,98 @@ window.onload = function() {
     context = canvas.getContext("2d");
     canvas.style.backgroundColor = "lightblue";
 
-    render();
+    canvas.onmousedown = handleMouseDown;
+    canvas.onmousemove = handleMouseMove;
+    canvas.onmouseup = handleMouseUp;
+
+    populateGrid();
+    draw();
 }
 
-function render() {
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    drawGrid();
+function populateGrid() {
+    for (let i = 0; i < NUM_ROWS * NUM_COLS; i++) {
+        gridContents.push(String.fromCharCode(Math.floor(Math.random() * 26) + 65));
+    }
+}
 
-    drawTileHighlightList([
-        [0, 0],
-        [1, 1],
-        [1, 0],
-        [0, 1],
-        [0, 2],
-        [0, 3],
-        [1, 3],
-    ]);
+function locationToColRow(x, y) {
+    let gridCol = Math.floor((x - MARGIN) / TILE_STRIDE);
+    let gridRow = Math.floor((y - MARGIN) / TILE_STRIDE);
+
+    if (gridCol < 0 || gridCol >= NUM_COLS || gridRow < 0 || gridRow >= NUM_ROWS) {
+        return null;
+    }
+
+    const pad = (TILE_STRIDE - TILE_SIZE) / 2;
+
+    // Check if this is inside the tile.
+    let tileLeft = gridCol * TILE_STRIDE + MARGIN + pad;
+    let tileTop = gridRow * TILE_STRIDE + MARGIN + pad;
+    let tileRight = tileLeft + TILE_SIZE;
+    let tileBottom = tileTop + TILE_SIZE;
+
+    if (x >= tileLeft && x <= tileRight && y >= tileTop && y <= tileBottom) {
+        return [gridCol, gridRow];
+    }
+
+    return null;
+}
+
+function handleSwipe(x, y) {
+    const gridLoc = locationToColRow(x, y);
+    if (!gridLoc)
+        return;
+
+    if ((gridLoc in highlightedCells)) {
+        // Check if we are undoing the last move
+        if (highlightList.length > 1) {
+            const prevCell = highlightList[highlightList.length - 2];
+            if (prevCell[0] == gridLoc[0] && prevCell[1] == gridLoc[1]) {
+                delete highlightedCells[highlightList.pop()];
+                currentWord = currentWord.substring(0, currentWord.length - 1);
+                draw();
+            }
+        }
+    } else if (highlightList.length == 0 || isAdjacent(highlightList[highlightList.length - 1], gridLoc)) {
+        // Add new cell
+        highlightedCells[gridLoc] = true;
+        highlightList.push(gridLoc);
+        currentWord = currentWord + gridContents[gridLoc[0] * NUM_COLS + gridLoc[1]];
+        draw();
+    }
+}
+
+function isAdjacent(coord1, coord2) {
+    return Math.abs(coord1[0] - coord2[0]) < 2 && Math.abs(coord1[1] - coord2[1]) < 2;
+}
+
+function handleMouseDown(event) {
+    mouseIsDown = true;
+    handleSwipe(event.clientX, event.clientY);
+}
+
+function handleMouseMove(event) {
+    if (mouseIsDown) {
+        handleSwipe(event.clientX, event.clientY);
+    }
+}
+
+function handleMouseUp(event) {
+    mouseIsDown = false;
+    highlightedCells = {};
+    highlightList = [];
+    currentWord = "";
+
+    draw();
+}
+
+function draw() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.reset(); // Hack, the last path is being re-rendered
+    drawGrid();
+    drawTileHighlightList(highlightList);
+    drawLetters();
+    drawCurrentWord();
 }
 
 function drawGrid() {
@@ -53,6 +136,27 @@ function drawGrid() {
             context.fill();
             context.stroke();
         }
+    }
+}
+
+function drawLetters() {
+    context.font = "20px serif";
+    context.fillStyle = "black";
+    for (let row = 0; row < NUM_ROWS; row++) {
+        for (let col = 0; col < NUM_COLS; col++) {
+            const letter = gridContents[row * NUM_COLS + col];
+            context.fillText(letter,
+                row * TILE_STRIDE + MARGIN + TILE_STRIDE / 2 - 8,
+                col * TILE_STRIDE + MARGIN + TILE_STRIDE / 2 + 4);
+        }
+    }
+}
+
+function drawCurrentWord() {
+    if (currentWord != "") {
+        const metrics = context.measureText(currentWord);
+        const left = (NUM_COLS * TILE_STRIDE - metrics.width) / 2 + MARGIN;
+        context.fillText(currentWord, left, MARGIN + TILE_STRIDE * NUM_ROWS + 20);
     }
 }
 
