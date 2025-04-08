@@ -28,7 +28,8 @@ const NUM_COLS = 10;
 const BACKGROUND_COLOR = "#a1abf8";
 const TILE_COLOR = "#e8e8e8";
 const HIGHLIGHT_COLOR = "#9097cf";
-const LINE_COLOR = "#000000"
+const LINE_COLOR = "#000000";
+const GRID_COLOR = "#808080";
 
 let mouseIsDown = false;
 let highlightList = [];
@@ -341,17 +342,36 @@ function drawScore() {
 }
 
 function drawGrid() {
-    context.strokeStyle = LINE_COLOR;
     context.lineWidth = 1;
-    context.fillStyle = TILE_COLOR;
+    context.strokeStyle = GRID_COLOR;
 
     const GAP = (TILE_STRIDE - TILE_SIZE) / 2;
+    for (let row = 0; row <= NUM_ROWS; row++) {
+        const y = TILE_STRIDE * row + MARGIN;
+        context.beginPath();
+        context.moveTo(MARGIN, y);
+        context.lineTo(MARGIN + NUM_COLS * TILE_STRIDE, y);
+        context.stroke();
+    }
+
+    for (let col = 0; col <= NUM_COLS; col++) {
+        const x = TILE_STRIDE * col + MARGIN;
+        context.beginPath();
+        context.moveTo(x, MARGIN);
+        context.lineTo(x, MARGIN + NUM_ROWS * TILE_STRIDE);
+        context.stroke();
+    }
+
+    context.strokeStyle = LINE_COLOR;
+    context.fillStyle = TILE_COLOR;
+
     for (let row = 0; row < NUM_ROWS; row++) {
         for (let col = 0; col < NUM_COLS; col++) {
             let tileX = col * TILE_STRIDE + MARGIN + GAP;
             let tileY = row * TILE_STRIDE + MARGIN + GAP;
 
             if (getLetterAt(row, col) != " ") {
+                context.beginPath();
                 context.roundRect(tileX, tileY, TILE_SIZE, TILE_SIZE, RADIUS);
                 context.fill();
                 context.stroke();
