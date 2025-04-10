@@ -17,7 +17,7 @@
 let canvas = null;
 let context = null;
 
-const TILE_STRIDE = 55; // Distance between consecutive edges
+const TILE_SPACING = 55; // Distance between neighboring edges
 const TILE_SIZE = 40;
 const TILE_HIGHLIGHT_SIZE = 30;
 const BRIDGE_WIDTH = 10;
@@ -30,7 +30,7 @@ const TILE_COLOR = "#e8e8e8";
 const HIGHLIGHT_COLOR = "#9097cf";
 const LINE_COLOR = "#000000";
 const GRID_COLOR = "#808080";
-const ROUND_LENGTH = 60;
+const ROUND_LENGTH_S = 60;
 
 let highlightList = [];
 let highlightedCells = {};
@@ -76,7 +76,7 @@ window.onload = function() {
 
 function heartBeat() {
     draw();
-    if ((Date.now() - lastRoundStart) / 1000 > ROUND_LENGTH) {
+    if ((Date.now() - lastRoundStart) / 1000 > ROUND_LENGTH_S) {
         resetGrid();
     }
 }
@@ -150,18 +150,18 @@ function test_random_gen() {
 }
 
 function locationToColRow(x, y) {
-    let gridCol = Math.floor((x - MARGIN) / TILE_STRIDE);
-    let gridRow = Math.floor((y - MARGIN) / TILE_STRIDE);
+    let gridCol = Math.floor((x - MARGIN) / TILE_SPACING);
+    let gridRow = Math.floor((y - MARGIN) / TILE_SPACING);
 
     if (gridCol < 0 || gridCol >= NUM_COLS || gridRow < 0 || gridRow >= NUM_ROWS) {
         return null;
     }
 
-    const pad = (TILE_STRIDE - TILE_SIZE) / 2;
+    const pad = (TILE_SPACING - TILE_SIZE) / 2;
 
     // Check if this is inside the tile.
-    let tileLeft = gridCol * TILE_STRIDE + MARGIN + pad;
-    let tileTop = gridRow * TILE_STRIDE + MARGIN + pad;
+    let tileLeft = gridCol * TILE_SPACING + MARGIN + pad;
+    let tileTop = gridRow * TILE_SPACING + MARGIN + pad;
     let tileRight = tileLeft + TILE_SIZE;
     let tileBottom = tileTop + TILE_SIZE;
 
@@ -357,7 +357,7 @@ function draw() {
 }
 
 function drawScore() {
-    const scorePaneLeft = NUM_COLS * TILE_STRIDE + MARGIN * 2;
+    const scorePaneLeft = NUM_COLS * TILE_SPACING + MARGIN * 2;
 
     context.fillText("Total Words: " + totalWords, scorePaneLeft, 25);
     context.fillText("Score: " + score, scorePaneLeft, 50);
@@ -372,20 +372,20 @@ function drawGrid() {
     context.lineWidth = 1;
     context.strokeStyle = GRID_COLOR;
 
-    const GAP = (TILE_STRIDE - TILE_SIZE) / 2;
+    const GAP = (TILE_SPACING - TILE_SIZE) / 2;
     for (let row = 0; row <= NUM_ROWS; row++) {
-        const y = TILE_STRIDE * row + MARGIN;
+        const y = TILE_SPACING * row + MARGIN;
         context.beginPath();
         context.moveTo(MARGIN, y);
-        context.lineTo(MARGIN + NUM_COLS * TILE_STRIDE, y);
+        context.lineTo(MARGIN + NUM_COLS * TILE_SPACING, y);
         context.stroke();
     }
 
     for (let col = 0; col <= NUM_COLS; col++) {
-        const x = TILE_STRIDE * col + MARGIN;
+        const x = TILE_SPACING * col + MARGIN;
         context.beginPath();
         context.moveTo(x, MARGIN);
-        context.lineTo(x, MARGIN + NUM_ROWS * TILE_STRIDE);
+        context.lineTo(x, MARGIN + NUM_ROWS * TILE_SPACING);
         context.stroke();
     }
 
@@ -394,8 +394,8 @@ function drawGrid() {
 
     for (let row = 0; row < NUM_ROWS; row++) {
         for (let col = 0; col < NUM_COLS; col++) {
-            let tileX = col * TILE_STRIDE + MARGIN + GAP;
-            let tileY = row * TILE_STRIDE + MARGIN + GAP;
+            let tileX = col * TILE_SPACING + MARGIN + GAP;
+            let tileY = row * TILE_SPACING + MARGIN + GAP;
 
             if (getLetterAt(row, col) != " ") {
                 context.beginPath();
@@ -414,8 +414,8 @@ function drawLetters() {
         for (let col = 0; col < NUM_COLS; col++) {
             const letter = getLetterAt(row, col);
             context.fillText(letter,
-                col * TILE_STRIDE + MARGIN + TILE_STRIDE / 2 - 8,
-                row * TILE_STRIDE + MARGIN + TILE_STRIDE / 2 + 4);
+                col * TILE_SPACING + MARGIN + TILE_SPACING / 2 - 8,
+                row * TILE_SPACING + MARGIN + TILE_SPACING / 2 + 4);
         }
     }
 }
@@ -423,8 +423,8 @@ function drawLetters() {
 function drawCurrentWord() {
     if (currentWord != "") {
         const metrics = context.measureText(currentWord);
-        const left = (NUM_COLS * TILE_STRIDE - metrics.width) / 2 + MARGIN;
-        context.fillText(currentWord, left, MARGIN + TILE_STRIDE * NUM_ROWS + 20);
+        const left = (NUM_COLS * TILE_SPACING - metrics.width) / 2 + MARGIN;
+        context.fillText(currentWord, left, MARGIN + TILE_SPACING * NUM_ROWS + 20);
     }
 }
 
@@ -434,13 +434,13 @@ function drawTileHighlightList(coords) {
     context.strokeStyle = LINE_COLOR;
     context.lineWidth = 1;
     context.fillStyle = HIGHLIGHT_COLOR;
-    const GAP = TILE_STRIDE - TILE_HIGHLIGHT_SIZE;
+    const GAP = TILE_SPACING - TILE_HIGHLIGHT_SIZE;
 
     for (let index = 0; index < coords.length; index++) {
         const curLoc = coords[index];
         const nextLoc = index < coords.length - 1 ? coords[index + 1] : null;
-        let tileX = curLoc[0] * TILE_STRIDE + MARGIN + GAP / 2;
-        let tileY = curLoc[1] * TILE_STRIDE + MARGIN + GAP / 2;
+        let tileX = curLoc[0] * TILE_SPACING + MARGIN + GAP / 2;
+        let tileY = curLoc[1] * TILE_SPACING + MARGIN + GAP / 2;
         let bridges = {};
 
         if (lastLoc != null) {
@@ -553,19 +553,19 @@ function drawHighlightBridge(x, y, direction) {
 function highlightBridgePath(x, y, direction, openFunc) {
     switch (direction) {
         case "S":
-            highlightBridgePathHelper(x, y + TILE_STRIDE, "N", openFunc);
+            highlightBridgePathHelper(x, y + TILE_SPACING, "N", openFunc);
             break;
 
         case "SW":
-            highlightBridgePathHelper(x - TILE_STRIDE, y + TILE_STRIDE, "NE", openFunc);
+            highlightBridgePathHelper(x - TILE_SPACING, y + TILE_SPACING, "NE", openFunc);
             break;
 
         case "W":
-            highlightBridgePathHelper(x - TILE_STRIDE, y, "E", openFunc);
+            highlightBridgePathHelper(x - TILE_SPACING, y, "E", openFunc);
             break;
 
         case "NW":
-            highlightBridgePathHelper(x - TILE_STRIDE, y - TILE_STRIDE, "SE", openFunc);
+            highlightBridgePathHelper(x - TILE_SPACING, y - TILE_SPACING, "SE", openFunc);
             break;
 
         default:
@@ -577,7 +577,7 @@ function highlightBridgePath(x, y, direction, openFunc) {
 function highlightBridgePathHelper(x, y, direction, openFunc) {
     let centerX = x + TILE_HIGHLIGHT_SIZE / 2;
     let centerY = y + TILE_HIGHLIGHT_SIZE / 2;
-    const GAP = TILE_STRIDE - TILE_HIGHLIGHT_SIZE;
+    const GAP = TILE_SPACING - TILE_HIGHLIGHT_SIZE;
 
     switch (direction) {
         case "N": {
