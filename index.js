@@ -32,6 +32,12 @@ const LINE_COLOR = "#000000";
 const GRID_COLOR = "#808080";
 const ROUND_LENGTH_S = 60;
 
+const INST_LEFT = NUM_COLS * TILE_SPACING + MARGIN * 2;
+const INST_TOP = 200;
+const INSTRUCTIONS = "Click on a tile to begin selection, then drag horizontally and diagonally to adjacent letters to form words."
+let wrappedInstructions = "";
+let instLineHeight = 0;
+
 let highlightList = [];
 let highlightedCells = {};
 let currentWord = "";
@@ -67,6 +73,11 @@ window.onload = function() {
     fetch('words.json')
         .then(response => response.json())
         .then(response => valid_words = response);
+
+    context.fillStyle = "black";
+    context.font = "14px arial";
+    [wrappedInstructions, instLineHeight] = wrapText(INSTRUCTIONS,
+        canvas.width - MARGIN - INST_LEFT);
 
     startTime = Date.now();
     resetGrid();
@@ -353,11 +364,13 @@ function draw() {
     drawLetters();
     drawCurrentWord();
     drawScore();
+    drawInstructions();
 }
 
 function drawScore() {
     const scorePaneLeft = NUM_COLS * TILE_SPACING + MARGIN * 2;
 
+    context.fillStyle = "black";
     context.fillText("Total Words: " + totalWords, scorePaneLeft, 25);
     context.fillText("Score: " + score, scorePaneLeft, 50);
 
@@ -365,6 +378,39 @@ function drawScore() {
     const seconds = elapsed % 60;
     const minutes = Math.floor(elapsed / 60);
     context.fillText("Time: " + minutes + ":" + String(seconds).padStart(2, "0"), scorePaneLeft, 75);
+}
+
+function wrapText(inText, totalWidth) {
+    const metrics = context.measureText("M");
+    const lineHeight = metrics.fontBoundingBoxAscent;
+    const words = inText.split(' ');
+    let lines = [];
+    let currentLine = "";
+    let x = 0;
+    for (const word of words) {
+        const trimmed = word.trim() + " ";
+        const wordWidth = context.measureText(trimmed).width;
+        if (x + wordWidth > totalWidth) {
+            x = 0;
+            lines.push(currentLine);
+            currentLine = "";
+        }
+
+        currentLine += trimmed;
+        x += wordWidth;
+    }
+
+    return [lines, lineHeight];
+}
+
+function drawInstructions() {
+    context.fillStyle = "black";
+    context.font = "14px arial";
+    let y = INST_TOP;
+    for (const line of wrappedInstructions) {
+        context.fillText(line, INST_LEFT, y);
+        y += instLineHeight;
+    }
 }
 
 function drawGrid() {
