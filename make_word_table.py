@@ -19,6 +19,9 @@
 print('[')
 with open('/usr/share/dict/words') as f:
     for line in f:
+        if line[0].isupper():
+            continue # Skip proper nouns
+
         cleaned = line.strip().upper()
         if len(cleaned) < 3:
             continue
