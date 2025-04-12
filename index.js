@@ -28,7 +28,8 @@ const NUM_ROWS = 10;
 const NUM_COLS = 10;
 const BACKGROUND_COLOR = "#76b4b9";
 const TILE_COLOR = "#e8e8e8";
-const HIGHLIGHT_COLOR = "#86abd3";
+const VALID_HIGHLIGHT_COLOR = "#25e44d";
+const INVALID_HIGHLIGHT_COLOR = "#fb0202";
 const LINE_COLOR = "#000000";
 const GRID_COLOR = "#808080";
 const ROUND_DURATION_S = 60;
@@ -43,6 +44,7 @@ let instLineHeight = 0;
 let highlightList = [];
 let highlightedCells = {};
 let currentWord = "";
+let currentWordValid = false;
 let gridContents = [];
 let valid_words = [];
 let totalWords = 0;
@@ -197,6 +199,7 @@ function handleSwipe(x, y) {
             if (prevCell[0] == gridLoc[0] && prevCell[1] == gridLoc[1]) {
                 delete highlightedCells[highlightList.pop()];
                 currentWord = currentWord.substring(0, currentWord.length - 1);
+                currentWordValid = isValidWord(currentWord);
                 draw();
             }
         }
@@ -205,6 +208,7 @@ function handleSwipe(x, y) {
         highlightedCells[gridLoc] = true;
         highlightList.push(gridLoc);
         currentWord = currentWord + getLetterAt(gridLoc[1], gridLoc[0]);
+        currentWordValid = isValidWord(currentWord);
         draw();
     }
 }
@@ -213,6 +217,7 @@ function resetSelection() {
     highlightedCells = {};
     highlightList = [];
     currentWord = "";
+    currentWordValid = false;
 }
 
 function handleKeyDown(event) {
@@ -238,7 +243,7 @@ function handleMouseMove(event) {
 }
 
 function handleMouseUp(event) {
-    if (isValidWord(currentWord)) {
+    if (currentWordValid) {
         totalWords += 1;
 
         // Reward longer words. A 3 letter word is worth 1+2+3 = 6
@@ -480,7 +485,12 @@ function drawTileHighlightList(coords) {
 
     context.strokeStyle = LINE_COLOR;
     context.lineWidth = 1;
-    context.fillStyle = HIGHLIGHT_COLOR;
+    if (currentWordValid) {
+        context.fillStyle = VALID_HIGHLIGHT_COLOR;
+    } else {
+        context.fillStyle = INVALID_HIGHLIGHT_COLOR;
+    }
+
     const GAP = TILE_SPACING - TILE_HIGHLIGHT_SIZE;
 
     for (let index = 0; index < coords.length; index++) {
