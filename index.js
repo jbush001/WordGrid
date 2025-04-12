@@ -76,7 +76,10 @@ window.onload = function() {
 
     fetch('words.json')
         .then(response => response.json())
-        .then(response => valid_words = response);
+        .then(response => valid_words = response)
+        .catch(error => {
+            alert("Error loading word list from server");
+        });
 
     context.fillStyle = "black";
     context.font = INST_FONT;
