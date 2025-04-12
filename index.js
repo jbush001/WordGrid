@@ -20,18 +20,20 @@ let context = null;
 const TILE_SPACING = 55; // Distance between neighboring edges
 const TILE_SIZE = 40;
 const TILE_HIGHLIGHT_SIZE = 30;
+const TILE_FONT = "20px monospace";
 const BRIDGE_WIDTH = 10;
 const RADIUS = 8;
 const MARGIN = 10; // Where the game board starts
 const NUM_ROWS = 10;
 const NUM_COLS = 10;
-const BACKGROUND_COLOR = "#a1abf8";
+const BACKGROUND_COLOR = "#76b4b9";
 const TILE_COLOR = "#e8e8e8";
-const HIGHLIGHT_COLOR = "#9097cf";
+const HIGHLIGHT_COLOR = "#86abd3";
 const LINE_COLOR = "#000000";
 const GRID_COLOR = "#808080";
-const ROUND_LENGTH_S = 60;
+const ROUND_DURATION_S = 60;
 
+const INST_FONT = "14px monospace";
 const INST_LEFT = NUM_COLS * TILE_SPACING + MARGIN * 2;
 const INST_TOP = 200;
 const INSTRUCTIONS = "Click on a tile to begin selection, then drag horizontally and diagonally to adjacent letters to form words."
@@ -75,7 +77,7 @@ window.onload = function() {
         .then(response => valid_words = response);
 
     context.fillStyle = "black";
-    context.font = "14px arial";
+    context.font = INST_FONT;
     [wrappedInstructions, instLineHeight] = wrapText(INSTRUCTIONS,
         canvas.width - MARGIN - INST_LEFT);
 
@@ -86,7 +88,7 @@ window.onload = function() {
 
 function heartBeat() {
     draw();
-    if ((Date.now() - lastRoundStart) / 1000 > ROUND_LENGTH_S) {
+    if ((Date.now() - lastRoundStart) / 1000 > ROUND_DURATION_S) {
         resetGrid();
     }
 }
@@ -405,7 +407,7 @@ function wrapText(inText, totalWidth) {
 
 function drawInstructions() {
     context.fillStyle = "black";
-    context.font = "14px arial";
+    context.font = INST_FONT;
     let y = INST_TOP;
     for (const line of wrappedInstructions) {
         context.fillText(line, INST_LEFT, y);
@@ -453,14 +455,14 @@ function drawGrid() {
 }
 
 function drawLetters() {
-    context.font = "20px serif";
+    context.font = TILE_FONT;
     context.fillStyle = LINE_COLOR;
     for (let row = 0; row < NUM_ROWS; row++) {
         for (let col = 0; col < NUM_COLS; col++) {
             const letter = getLetterAt(row, col);
             context.fillText(letter,
                 col * TILE_SPACING + MARGIN + TILE_SPACING / 2 - 8,
-                row * TILE_SPACING + MARGIN + TILE_SPACING / 2 + 4);
+                row * TILE_SPACING + MARGIN + TILE_SPACING / 2 + 6);
         }
     }
 }
