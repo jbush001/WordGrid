@@ -18,10 +18,9 @@
 
 import sys
 
-with open('words.json', 'w') as outfile:
-    outfile.write('[\n')
-    first_line = True
-    with open(sys.argv[1]) as infile:
+all_words = set()
+for filename in sys.argv[1:]:
+    with open(filename) as infile:
         for line in infile:
             if line[0].isupper() and line[1].islower():
                 continue # Skip proper nouns
@@ -30,10 +29,16 @@ with open('words.json', 'w') as outfile:
             if len(cleaned) < 3:
                 continue
 
-            if not first_line:
-                outfile.write(',\n')
+            all_words.add(cleaned)
 
-            first_line = False
-            outfile.write(f'    "{cleaned}"')
+with open('words.json', 'w') as outfile:
+    outfile.write('[\n')
+    first_line = True
+    for word in sorted(list(all_words)):
+        if not first_line:
+            outfile.write(',\n')
+
+        first_line = False
+        outfile.write(f'    "{word}"')
 
     outfile.write('\n]\n')
