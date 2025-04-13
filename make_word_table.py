@@ -14,18 +14,26 @@
 # limitations under the License.
 #
 
-# Usage: python3 make_word_table.py > words.json
+# Usage: python3 make_word_table.py <words file>
 
-print('[')
-with open('/usr/share/dict/words') as f:
-    for line in f:
-        if line[0].isupper():
-            continue # Skip proper nouns
+import sys
 
-        cleaned = line.strip().upper()
-        if len(cleaned) < 3:
-            continue
+with open('words.json', 'w') as outfile:
+    outfile.write('[\n')
+    first_line = True
+    with open(sys.argv[1]) as infile:
+        for line in infile:
+            if line[0].isupper() and line[1].islower():
+                continue # Skip proper nouns
 
-        print(f'    "{cleaned}",')
+            cleaned = line.strip().upper()
+            if len(cleaned) < 3:
+                continue
 
-print(']')
+            if not first_line:
+                outfile.write(',\n')
+
+            first_line = False
+            outfile.write(f'    "{cleaned}"')
+
+    outfile.write('\n]\n')
