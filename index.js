@@ -37,7 +37,10 @@ const ROUND_DURATION_S = 60;
 const INST_FONT = "14px monospace";
 const INST_LEFT = NUM_COLS * TILE_SPACING + MARGIN * 2;
 const INST_TOP = 200;
-const INSTRUCTIONS = "Click on a tile to begin selection, then drag horizontally and diagonally to adjacent letters to form words."
+const INSTRUCTIONS = `
+Click on a tile to begin selection, then drag horizontally and diagonally to adjacent letters to form words.
+Try to create longer words, which are worth more points.
+`;
 let wrappedInstructions = "";
 let instLineHeight = 0;
 
@@ -414,6 +417,10 @@ function wrapText(inText, totalWidth) {
 
         currentLine += trimmed;
         x += wordWidth;
+    }
+
+    if (currentLine.length > 0) {
+        lines.push(currentLine);
     }
 
     return [lines, lineHeight];
