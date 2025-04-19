@@ -115,6 +115,7 @@ function resetGame() {
     nextRound = startTime;
     level = 1;
     score = 0;
+    totalWords = 0;
     resetGrid();
 }
 
