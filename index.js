@@ -114,6 +114,7 @@ function resetGame() {
     startTime = Date.now();
     nextRound = startTime;
     level = 1;
+    score = 0;
     resetGrid();
 }
 
@@ -430,7 +431,7 @@ function drawScore() {
     context.fillText("Level: " + level, scorePaneLeft, 25);
     context.fillText("Total Words: " + totalWords, scorePaneLeft, 50);
     context.fillText("Score: " + score, scorePaneLeft, 75);
-    context.fillText("Lines: " + clearedLines + "/" + level, scorePaneLeft, 100);
+    context.fillText("Lines: " + clearedLines + "/" + Math.min(level, NUM_ROWS + NUM_COLS), scorePaneLeft, 100);
 
     // Note round ends when time hits zero, hence minus one
     const remaining = Math.floor((nextRound - Date.now()) / 1000);
