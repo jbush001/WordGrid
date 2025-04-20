@@ -559,10 +559,17 @@ function drawInstructions() {
 
 function drawDialog() {
     const width = 400;
-    const height = 200;
+    const height = 150;
     const left = (canvas.width - width) / 2;
     const top = (canvas.height - height) / 2;
 
+    // Create the background scrim
+    context.globalAlpha = 0.5;
+    context.fillStyle = "#000000";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.globalAlpha = 1.0;
+
+    // Dialog container
     context.fillStyle = "#dddddd";
     context.fillRect(left, top, width, height);
     context.strokeStyle = "#808080";
