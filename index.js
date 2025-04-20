@@ -101,6 +101,7 @@ function heartBeat() {
         if (Date.now() >= nextRound - 2) {
             if (clearedLines >= level || level >= NUM_ROWS + NUM_COLS) {
                 showingInterstitial = true;
+                clearedLines = 0;
                 level++;
             } else {
                 gameOver = true;
