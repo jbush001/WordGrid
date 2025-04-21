@@ -56,6 +56,17 @@ let clearedLines = 0;
 let nextRound = null;
 let level = 1;
 let pauseStart = 0;
+const SoundEffect = Object.freeze({
+    LEVEL_DONE: "level-done.wav",
+    GAME_OVER: "game-over.wav",
+    ALMOST_TIME_OUT: "almost-time-out.wav",
+    PAUSE: "pause.wav",
+    UNPAUSE: "unpause.wav",
+    ADD_WORD: "add-word.wav",
+    CLEAR_LINES: "clear-lines.wav",
+});
+let cachedAudioPlayers = {};
+let enableAudio = true;
 
 const GameState = Object.freeze({
     GAME_OVER: 0,
@@ -91,7 +102,7 @@ window.onload = function() {
 
     fetch('words.json')
         .then(response => response.json())
-        .then(response => valid_words = response)
+        .then(response => validWords = response)
         .catch(error => {
             alert("Error loading word list from server");
         });
@@ -100,9 +111,16 @@ window.onload = function() {
     context.font = INST_FONT;
     [wrappedInstructions, instLineHeight] = wrapText(INSTRUCTIONS,
         canvas.width - MARGIN - INST_LEFT);
+    preloadSoundEffects();
 
     startNewGame();
     setInterval(heartBeat, 1000);
+}
+
+function preloadSoundEffects() {
+    for (filename of Object.values(SoundEffect)) {
+        cachedAudioPlayers[filename] = new Audio(filename);
+    }
 }
 
 function heartBeat() {
@@ -112,12 +130,29 @@ function heartBeat() {
                 gameState = GameState.INTERSTITIAL;
                 clearedLines = 0;
                 level++;
+                playSound(SoundEffect.LEVEL_DONE);
             } else {
                 gameState = GameState.GAME_OVER;
+                playSound(SoundEffect.GAME_OVER);
             }
+        } else if (nextRound - Date.now() <= 6000) {
+            playSound(SoundEffect.ALMOST_TIME_OUT);
         }
 
         draw();
+    }
+}
+
+function playSound(name) {
+    if (!enableAudio) {
+        return;
+    }
+
+    try {
+        console.log("play", name, cachedAudioPlayers[name]);
+        cachedAudioPlayers[name].cloneNode(true).play();
+    } catch (error) {
+        console.log("Error playing", name);
     }
 }
 
@@ -157,15 +192,15 @@ function isValidWord(word) {
     }
 
     let low = 0;
-    let high = valid_words.length - 1;
+    let high = validWords.length - 1;
 
     while (low <= high) {
         const mid = Math.floor((low + high) / 2);
-        if (word == valid_words[mid]) {
+        if (word == validWords[mid]) {
             return true;
         }
 
-        if (word > valid_words[mid]) {
+        if (word > validWords[mid]) {
             low = mid + 1;
         } else {
             high = mid - 1;
@@ -270,6 +305,7 @@ function handleKeyDown(event) {
         resetSelection();
         draw();
     } else if (event.key == "p" && gameState == GameState.PLAYING) {
+        playSound(SoundEffect.PAUSE);
         pause();
     } else if (gameState == GameState.PAUSED) {
         unpause();
@@ -277,15 +313,20 @@ function handleKeyDown(event) {
 }
 
 function pause() {
-    gameState = GameState.PAUSED;
-    pauseStart = Date.now();
-    draw();
+    if (gameState != GameState.PAUSED) {
+        gameState = GameState.PAUSED;
+        pauseStart = Date.now();
+        draw();
+    }
 }
 
 function unpause() {
-    gameState = GameState.PLAYING;
-    nextRound += Date.now() - pauseStart;
-    draw();
+    if (gameState == GameState.PAUSED) {
+        playSound(SoundEffect.UNPAUSE);
+        gameState = GameState.PLAYING;
+        nextRound += Date.now() - pauseStart;
+        draw();
+    }
 }
 
 function isAdjacent(coord1, coord2) {
@@ -337,7 +378,11 @@ function handleMouseUp(event) {
         const n = currentWord.length;
         score += Math.floor((n * (n + 1)) / 2);
         removeHighlightedLetters();
-        compressTiles();
+        if (compressTiles()) {
+            playSound(SoundEffect.CLEAR_LINES);
+        } else {
+            playSound(SoundEffect.ADD_WORD);
+        }
     }
 
     resetSelection();
@@ -362,19 +407,22 @@ function removeHighlightedLetters() {
 
 function compressTiles() {
     dropTiles();
-    clearedLines = 0;
+    let newClearedLines = 0;
     for (let row = 0; row < NUM_ROWS; row++) {
         if (!isRowEmpty(row)) {
             break;
         }
 
-        clearedLines++;
+        newClearedLines++;
     }
 
-    clearedLines += removeEmptyColumns();
+    newClearedLines += removeEmptyColumns();
+    if (newClearedLines > clearedLines) {
+        clearedLines = newClearedLines;
+        return true;
+    }
 
-    // XXX if there are new cleared lines, should play a sound effect or
-    // display some sort of visual indication.
+    return false;
 }
 
 function dropTiles() {
