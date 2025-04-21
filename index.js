@@ -118,7 +118,7 @@ window.onload = function() {
 }
 
 function preloadSoundEffects() {
-    for (filename of Object.values(SoundEffect)) {
+    for (const filename of Object.values(SoundEffect)) {
         cachedAudioPlayers[filename] = new Audio(filename);
     }
 }
@@ -187,7 +187,7 @@ function clearGrid() {
 }
 
 function isValidWord(word) {
-    if (word.lenght < 3) {
+    if (word.length < 3) {
         return false;
     }
 
