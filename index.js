@@ -651,7 +651,7 @@ function drawDialog() {
             break;
 
         case GameState.INTERSTITIAL:
-            text = "You must clear " + level + " line" + (level > 1 ? "s" : "") + " to pass this level";
+            text = "You must clear " + (nextLevel) + " line" + (level > 1 ? "s" : "") + " to pass this level";
             break;
 
         case GameState.PAUSED:
