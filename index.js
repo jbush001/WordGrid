@@ -55,6 +55,7 @@ let score = 0;
 let clearedLines = 0;
 let nextRound = null;
 let level = 1;
+let nextLevel = 1;
 let pauseStart = 0;
 const SoundEffect = Object.freeze({
     LEVEL_DONE: "level-done.wav",
@@ -127,10 +128,7 @@ function heartBeat() {
     if (gameState == GameState.PLAYING) {
         if (Date.now() >= nextRound - 2) {
             if (clearedLines >= level || level >= NUM_ROWS + NUM_COLS) {
-                gameState = GameState.INTERSTITIAL;
-                clearedLines = 0;
-                level++;
-                playSound(SoundEffect.LEVEL_DONE);
+                finishLevel();
             } else {
                 gameState = GameState.GAME_OVER;
                 playSound(SoundEffect.GAME_OVER);
@@ -141,6 +139,35 @@ function heartBeat() {
 
         draw();
     }
+}
+
+function startNewGame() {
+    nextLevel = 1;
+    level = 1;
+    score = 0;
+    totalWords = 0;
+    gameState = GameState.INTERSTITIAL;
+    clearGrid();
+}
+
+function startLevel() {
+    nextRound = Date.now() + ROUND_DURATION_S * 1000;
+    gameState = GameState.PLAYING;
+    populateGrid();
+    clearedLines = 0;
+
+    // nextLevel is a little strange. When we are on the interstitial for
+    // the first level, the score panel displays level 1. But after each
+    // subsequent level, it displays the previous level (so the player can
+    // see how they did). For this reason, we can't simply increment
+    // level here.
+    level = nextLevel;
+}
+
+function finishLevel() {
+    playSound(SoundEffect.LEVEL_DONE);
+    gameState = GameState.INTERSTITIAL;
+    nextLevel = level + 1;
 }
 
 function playSound(name) {
@@ -154,14 +181,6 @@ function playSound(name) {
     } catch (error) {
         console.log("Error playing", name);
     }
-}
-
-function startNewGame() {
-    level = 1;
-    score = 0;
-    totalWords = 0;
-    gameState = GameState.INTERSTITIAL;
-    clearGrid();
 }
 
 function populateGrid() {
@@ -313,7 +332,7 @@ function handleKeyDown(event) {
 }
 
 function pause() {
-    if (gameState != GameState.PAUSED) {
+    if (gameState == GameState.PLAYING) {
         gameState = GameState.PAUSED;
         pauseStart = Date.now();
         draw();
@@ -336,7 +355,7 @@ function isAdjacent(coord1, coord2) {
 function handleMouseDown(event) {
     switch (gameState) {
         case GameState.INTERSTITIAL:
-            startRound();
+            startLevel();
             break;
 
         case GameState.GAME_OVER:
@@ -351,12 +370,6 @@ function handleMouseDown(event) {
             unpause();
             break;
     }
-}
-
-function startRound() {
-    nextRound = Date.now() + ROUND_DURATION_S * 1000;
-    gameState = GameState.PLAYING;
-    populateGrid();
 }
 
 function handleMouseMove(event) {
