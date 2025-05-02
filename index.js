@@ -557,7 +557,25 @@ function drawScore() {
     context.fillText("Level: " + level, scorePaneLeft, 25);
     context.fillText("Total Words: " + totalWords, scorePaneLeft, 50);
     context.fillText("Score: " + score, scorePaneLeft, 75);
-    context.fillText("Lines: " + clearedLines + "/" + Math.min(level, NUM_ROWS + NUM_COLS), scorePaneLeft, 100);
+    const linesNeeded = Math.min(level, NUM_ROWS + NUM_COLS);
+    const canPass = clearedLines >= linesNeeded;
+    const linesText = "Lines: " + clearedLines + "/" + linesNeeded;
+    context.save();
+    if (canPass) {
+        context.fillStyle = "green";
+        context.strokeStyle= "green";
+        context.lineWidth = 3;
+        context.beginPath();
+        const checkLeft = context.measureText(linesText).width + scorePaneLeft + 5;
+        const checkBottom = 98;
+        context.moveTo(checkLeft, checkBottom - 5);
+        context.lineTo(checkLeft + 5, checkBottom);
+        context.lineTo(checkLeft + 15, checkBottom - 10);
+        context.stroke();
+    }
+
+    context.fillText(linesText, scorePaneLeft, 100);
+    context.restore();
 
     // Note round ends when time hits zero, hence minus one
     let remaining = 0;
