@@ -589,6 +589,8 @@ function drawScore() {
             break;
     }
 
+    remaining = Math.max(0, remaining);
+
     const seconds = remaining % 60;
     const minutes = Math.floor(remaining / 60);
 
