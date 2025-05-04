@@ -148,7 +148,7 @@ function initAudio() {
 
 function heartBeat() {
     if (gameState == GameState.PLAYING) {
-        if (Date.now() >= nextRound - 2) {
+        if (Date.now() >= nextRound - 1000) {
             if (clearedLines >= level || level >= NUM_ROWS + NUM_COLS) {
                 finishLevel();
             } else {
