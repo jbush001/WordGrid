@@ -19,47 +19,33 @@
 # from wikipedia into a form the program can use.
 #
 
+import json
+from collections import defaultdict
 
-# https://en.wikipedia.org/wiki/Letter_frequency
-RAW_FREQ = [
-    ('A', 7.8),
-    ('B', 2.0),
-    ('C', 4.0),
-    ('D', 3.8),
-    ('E', 11.0),
-    ('F', 1.4),
-    ('G', 3.0),
-    ('H', 2.3),
-    ('I', 8.6),
-    ('J', 0.21),
-    ('K', 0.97),
-    ('L', 5.3),
-    ('M', 2.7),
-    ('N', 7.2),
-    ('O', 6.1),
-    ('P', 2.8),
-    ('Q', 0.19),
-    ('R', 7.3),
-    ('S', 8.7),
-    ('T', 6.7),
-    ('U', 3.3),
-    ('V', 1.0),
-    ('W', 0.91),
-    ('X', 0.27),
-    ('Y', 1.6),
-    ('Z', 0.44),
-]
+with open('words.json') as f:
+    words = json.load(f)
 
-RAW_FREQ.sort(key=lambda x: x[1])
+raw_counts = defaultdict(int)
+for word in words:
+    for letter in word:
+        raw_counts[letter.upper()] += 1
 
-cum_freq = []
+total = sum(raw_counts.values())
+probabilities = sorted(
+    [(letter, count / total) for letter, count in raw_counts.items()],
+    key=lambda x: x[1]
+)
+
+cumulative_prob = []
 total = 0
-for letter, freq in RAW_FREQ:
-    total += freq / 100
-    if total > 1:
-        total = 1
+for letter, freq in probabilities:
+    total = min(1, total + freq)
+    cumulative_prob.append([letter, round(total, 4)])
 
-    cum_freq.append([letter, round(total, 4)])
+print('const FREQ_TABLE = [\n    ', end='')
+for i, (letter, prob) in enumerate(cumulative_prob):
+    print(f'["{letter}", {prob:.04f}], ', end='')
+    if i % 5 == 4:
+        print('\n    ', end='')
 
-cum_freq[-1][1] = 1.0
-print(cum_freq)
+print('\n];')
