@@ -127,22 +127,76 @@ function initAudio() {
         audioContext.resume();
     }
 
-    for (const filename of Object.values(SoundEffect)) {
-        audioBuffers[filename] = null;
-        fetch(filename).then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status} for ${filename}`);
-            } else {
-                return response.arrayBuffer();
-            }
-        }).then(arrayBuffer => {
-            return audioContext.decodeAudioData(arrayBuffer);
-        }).then(audioBuffer => {
-            audioBuffers[filename] = audioBuffer;
-            console.log("loaded", filename, audioBuffer);
-        }).catch(err => {
-            console.log("Error", err, "loading sound effect", filename);
-        });
+    const fileNames = Object.values(SoundEffect);
+    const promises = fileNames.map(async (file) => {
+        const response = await fetch(file);
+        const arrayBuffer = await response.arrayBuffer();
+        audioBuffers[file] = await audioContext.decodeAudioData(arrayBuffer);
+    });
+
+    Promise.all(promises);
+}
+
+function handleMouseDown(event) {
+    switch (gameState) {
+        case GameState.INTERSTITIAL:
+            startLevel();
+            break;
+
+        case GameState.GAME_OVER:
+            startNewGame();
+            break;
+
+        case GameState.PLAYING:
+            handleSwipe(event.clientX, event.clientY);
+            break;
+
+        case GameState.PAUSED:
+            unpause();
+            break;
+    }
+}
+
+function handleMouseMove(event) {
+    if ((event.buttons & 1) != 0 && gameState == GameState.PLAYING) {
+        handleSwipe(event.clientX, event.clientY);
+    }
+}
+
+function handleMouseUp(event) {
+    if (gameState != GameState.PLAYING) {
+        return;
+    }
+
+    if (currentWordValid) {
+        totalWords += 1;
+
+        // Reward longer words. A 3 letter word is worth 1+2+3 = 6
+        // A four letter is 1+2+3+4 = 10, five is 1+2+3+4+5=15
+        const n = currentWord.length;
+        score += Math.floor((n * (n + 1)) / 2);
+        removeHighlightedLetters();
+        if (compressTiles()) {
+            playSound(SoundEffect.CLEAR_LINES);
+        } else {
+            playSound(SoundEffect.ADD_WORD);
+        }
+    }
+
+    resetSelection();
+
+    draw();
+}
+
+function handleKeyDown(event) {
+    if (event.key === "Escape") {
+        resetSelection();
+        draw();
+    } else if (event.key == "p" && gameState == GameState.PLAYING) {
+        playSound(SoundEffect.PAUSE);
+        pause();
+    } else if (gameState == GameState.PAUSED) {
+        unpause();
     }
 }
 
@@ -265,7 +319,7 @@ function generateRandomLetter() {
     return FREQ_TABLE[low][0];
 }
 
-function testRandomGen() {
+function _testRandomGen() {
     const TOTAL_TRIALS = 100000;
     let freqTable = {};
     for (let i = 0; i < TOTAL_TRIALS; i++) {
@@ -341,18 +395,6 @@ function resetSelection() {
     currentWordValid = false;
 }
 
-function handleKeyDown(event) {
-    if (event.key === "Escape") {
-        resetSelection();
-        draw();
-    } else if (event.key == "p" && gameState == GameState.PLAYING) {
-        playSound(SoundEffect.PAUSE);
-        pause();
-    } else if (gameState == GameState.PAUSED) {
-        unpause();
-    }
-}
-
 function pause() {
     if (gameState == GameState.PLAYING) {
         gameState = GameState.PAUSED;
@@ -372,57 +414,6 @@ function unpause() {
 
 function isAdjacent(coord1, coord2) {
     return Math.abs(coord1[0] - coord2[0]) < 2 && Math.abs(coord1[1] - coord2[1]) < 2;
-}
-
-function handleMouseDown(event) {
-    switch (gameState) {
-        case GameState.INTERSTITIAL:
-            startLevel();
-            break;
-
-        case GameState.GAME_OVER:
-            startNewGame();
-            break;
-
-        case GameState.PLAYING:
-            handleSwipe(event.clientX, event.clientY);
-            break;
-
-        case GameState.PAUSED:
-            unpause();
-            break;
-    }
-}
-
-function handleMouseMove(event) {
-    if ((event.buttons & 1) != 0 && gameState == GameState.PLAYING) {
-        handleSwipe(event.clientX, event.clientY);
-    }
-}
-
-function handleMouseUp(event) {
-    if (gameState != GameState.PLAYING) {
-        return;
-    }
-
-    if (currentWordValid) {
-        totalWords += 1;
-
-        // Reward longer words. A 3 letter word is worth 1+2+3 = 6
-        // A four letter is 1+2+3+4 = 10, five is 1+2+3+4+5=15
-        const n = currentWord.length;
-        score += Math.floor((n * (n + 1)) / 2);
-        removeHighlightedLetters();
-        if (compressTiles()) {
-            playSound(SoundEffect.CLEAR_LINES);
-        } else {
-            playSound(SoundEffect.ADD_WORD);
-        }
-    }
-
-    resetSelection();
-
-    draw();
 }
 
 function getLetterAt(row, col) {
@@ -625,33 +616,6 @@ function drawScore() {
     }
 
     context.fillText("Time: " + minutes + ":" + String(seconds).padStart(2, "0"), scorePaneLeft, 125);
-}
-
-function wrapText(inText, totalWidth) {
-    const metrics = context.measureText("M");
-    const lineHeight = metrics.fontBoundingBoxAscent;
-    const words = inText.split(' ');
-    let lines = [];
-    let currentLine = "";
-    let x = 0;
-    for (const word of words) {
-        const trimmed = word.trim() + " ";
-        const wordWidth = context.measureText(trimmed).width;
-        if (x + wordWidth > totalWidth) {
-            x = 0;
-            lines.push(currentLine);
-            currentLine = "";
-        }
-
-        currentLine += trimmed;
-        x += wordWidth;
-    }
-
-    if (currentLine.length > 0) {
-        lines.push(currentLine);
-    }
-
-    return [lines, lineHeight];
 }
 
 function drawInstructions() {
@@ -965,4 +929,31 @@ function highlightBridgePathHelper(x, y, direction, openFunc) {
             break;
         }
     }
+}
+
+function wrapText(inText, totalWidth) {
+    const metrics = context.measureText("M");
+    const lineHeight = metrics.fontBoundingBoxAscent;
+    const words = inText.split(' ');
+    let lines = [];
+    let currentLine = "";
+    let x = 0;
+    for (const word of words) {
+        const trimmed = word.trim() + " ";
+        const wordWidth = context.measureText(trimmed).width;
+        if (x + wordWidth > totalWidth) {
+            x = 0;
+            lines.push(currentLine);
+            currentLine = "";
+        }
+
+        currentLine += trimmed;
+        x += wordWidth;
+    }
+
+    if (currentLine.length > 0) {
+        lines.push(currentLine);
+    }
+
+    return [lines, lineHeight];
 }
