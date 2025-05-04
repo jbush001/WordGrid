@@ -937,18 +937,20 @@ function wrapText(inText, totalWidth) {
     const words = inText.split(' ');
     let lines = [];
     let currentLine = "";
-    let x = 0;
     for (const word of words) {
-        const trimmed = word.trim() + " ";
-        const wordWidth = context.measureText(trimmed).width;
-        if (x + wordWidth > totalWidth) {
+        const trimmed = word.trim();
+        if (trimmed == "") {
+            continue;
+        }
+
+        const lineWidth = context.measureText(currentLine + " " + trimmed).width;
+        if (lineWidth > totalWidth) {
             x = 0;
             lines.push(currentLine);
             currentLine = "";
         }
 
-        currentLine += trimmed;
-        x += wordWidth;
+        currentLine += " " + trimmed;
     }
 
     if (currentLine.length > 0) {
