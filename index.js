@@ -58,13 +58,15 @@ let level = 1;
 let nextLevel = 1;
 let pauseStart = 0;
 const SoundEffect = Object.freeze({
-    LEVEL_DONE: "level-done.wav",
-    GAME_OVER: "game-over.wav",
-    ALMOST_TIME_OUT: "almost-time-out.wav",
-    PAUSE: "pause.wav",
-    UNPAUSE: "unpause.wav",
-    ADD_WORD: "add-word.wav",
-    CLEAR_LINES: "clear-lines.wav",
+    LEVEL_DONE: "level-done.mp3",
+    GAME_OVER: "game-over.mp3",
+    ALMOST_TIME_OUT: "almost-time-out.mp3",
+    PAUSE: "pause.mp3",
+    UNPAUSE: "unpause.mp3",
+    ADD_WORD: "add-word.mp3",
+    CLEAR_LINES: "clear-lines.mp3",
+    PASSED_LEVEL: "passed-level.mp3",
+    SELECT_TILE: "select-tile.mp3",
 });
 let audioContext = null;
 let audioBuffers = {};
@@ -317,6 +319,7 @@ function handleSwipe(x, y) {
                 delete highlightedCells[highlightList.pop()];
                 currentWord = currentWord.substring(0, currentWord.length - 1);
                 currentWordValid = isValidWord(currentWord);
+                playSound(SoundEffect.SELECT_TILE);
                 draw();
             }
         }
@@ -326,6 +329,7 @@ function handleSwipe(x, y) {
         highlightList.push(gridLoc);
         currentWord = currentWord + getLetterAt(gridLoc[1], gridLoc[0]);
         currentWordValid = isValidWord(currentWord);
+        playSound(SoundEffect.SELECT_TILE);
         draw();
     }
 }
@@ -450,6 +454,10 @@ function compressTiles() {
     newClearedLines += removeEmptyColumns();
     if (newClearedLines > clearedLines) {
         clearedLines = newClearedLines;
+        if (clearedLines == level) {
+            playSound(SoundEffect.PASSED_LEVEL);
+        }
+
         return true;
     }
 
