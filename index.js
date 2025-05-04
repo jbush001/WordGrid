@@ -66,7 +66,8 @@ const SoundEffect = Object.freeze({
     ADD_WORD: "add-word.wav",
     CLEAR_LINES: "clear-lines.wav",
 });
-let cachedAudioPlayers = {};
+let audioContext = null;
+let audioBuffers = {};
 let enableAudio = true;
 
 const GameState = Object.freeze({
@@ -112,15 +113,34 @@ window.onload = function() {
     context.font = INST_FONT;
     [wrappedInstructions, instLineHeight] = wrapText(INSTRUCTIONS,
         canvas.width - MARGIN - INST_LEFT);
-    preloadSoundEffects();
+    initAudio();
 
     startNewGame();
     setInterval(heartBeat, 1000);
 }
 
-function preloadSoundEffects() {
+function initAudio() {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+
     for (const filename of Object.values(SoundEffect)) {
-        cachedAudioPlayers[filename] = new Audio(filename);
+        audioBuffers[filename] = null;
+        fetch(filename).then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status} for ${filename}`);
+            } else {
+                return response.arrayBuffer();
+            }
+        }).then(arrayBuffer => {
+            return audioContext.decodeAudioData(arrayBuffer);
+        }).then(audioBuffer => {
+            audioBuffers[filename] = audioBuffer;
+            console.log("loaded", filename, audioBuffer);
+        }).catch(err => {
+            console.log("Error", err, "loading sound effect", filename);
+        });
     }
 }
 
@@ -175,12 +195,10 @@ function playSound(name) {
         return;
     }
 
-    try {
-        console.log("play", name, cachedAudioPlayers[name]);
-        cachedAudioPlayers[name].cloneNode(true).play();
-    } catch (error) {
-        console.log("Error playing", name);
-    }
+    const sourceNode = audioContext.createBufferSource();
+    sourceNode.buffer = audioBuffers[name];
+    sourceNode.connect(audioContext.destination);
+    sourceNode.start(0);
 }
 
 function populateGrid() {
