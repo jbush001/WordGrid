@@ -15,8 +15,7 @@
 #
 
 #
-# Quick and dirty utility to massage the alphabet frequency table I pulled
-# from wikipedia into a form the program can use.
+# Create letter frequency table used by main program
 #
 
 import json
