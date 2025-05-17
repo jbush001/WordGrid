@@ -14,6 +14,8 @@
 // limitations under the License.
 //
 
+"use strict";
+
 const TILE_SPACING = 55; // Distance between neighboring edges
 const TILE_SIZE = 40;
 const TILE_HIGHLIGHT_SIZE = 30;
@@ -315,8 +317,8 @@ function _testGenerateRandomLetter() {
 }
 
 function locationToColRow(x, y) {
-    let gridCol = Math.floor((x - MARGIN) / TILE_SPACING);
-    let gridRow = Math.floor((y - MARGIN) / TILE_SPACING);
+    const gridCol = Math.floor((x - MARGIN) / TILE_SPACING);
+    const gridRow = Math.floor((y - MARGIN) / TILE_SPACING);
 
     if (gridCol < 0 || gridCol >= NUM_COLS || gridRow < 0 || gridRow >= NUM_ROWS) {
         return null;
@@ -325,10 +327,10 @@ function locationToColRow(x, y) {
     const pad = (TILE_SPACING - TILE_SIZE) / 2;
 
     // Check if this is inside the tile.
-    let tileLeft = gridCol * TILE_SPACING + MARGIN + pad;
-    let tileTop = gridRow * TILE_SPACING + MARGIN + pad;
-    let tileRight = tileLeft + TILE_SIZE;
-    let tileBottom = tileTop + TILE_SIZE;
+    const tileLeft = gridCol * TILE_SPACING + MARGIN + pad;
+    const tileTop = gridRow * TILE_SPACING + MARGIN + pad;
+    const tileRight = tileLeft + TILE_SIZE;
+    const tileBottom = tileTop + TILE_SIZE;
 
     if (x >= tileLeft && x <= tileRight && y >= tileTop && y <= tileBottom) {
         return [gridCol, gridRow];
@@ -680,8 +682,8 @@ function drawGrid() {
 
     for (let row = 0; row < NUM_ROWS; row++) {
         for (let col = 0; col < NUM_COLS; col++) {
-            let tileX = col * TILE_SPACING + MARGIN + GAP;
-            let tileY = row * TILE_SPACING + MARGIN + GAP;
+            const tileX = col * TILE_SPACING + MARGIN + GAP;
+            const tileY = row * TILE_SPACING + MARGIN + GAP;
 
             if (getLetterAt(row, col) != " ") {
                 context.beginPath();
@@ -730,8 +732,8 @@ function drawTileHighlightList(coords) {
     for (let index = 0; index < coords.length; index++) {
         const curLoc = coords[index];
         const nextLoc = index < coords.length - 1 ? coords[index + 1] : null;
-        let tileX = curLoc[0] * TILE_SPACING + MARGIN + GAP / 2;
-        let tileY = curLoc[1] * TILE_SPACING + MARGIN + GAP / 2;
+        const tileX = curLoc[0] * TILE_SPACING + MARGIN + GAP / 2;
+        const tileY = curLoc[1] * TILE_SPACING + MARGIN + GAP / 2;
         let bridges = {};
 
         if (lastLoc != null) {
@@ -866,8 +868,8 @@ function highlightBridgePath(x, y, direction, openFunc) {
 }
 
 function highlightBridgePathHelper(x, y, direction, openFunc) {
-    let centerX = x + TILE_HIGHLIGHT_SIZE / 2;
-    let centerY = y + TILE_HIGHLIGHT_SIZE / 2;
+    const centerX = x + TILE_HIGHLIGHT_SIZE / 2;
+    const centerY = y + TILE_HIGHLIGHT_SIZE / 2;
     const GAP = TILE_SPACING - TILE_HIGHLIGHT_SIZE;
 
     switch (direction) {
@@ -923,7 +925,6 @@ function wrapText(inText, totalWidth) {
 
         const lineWidth = context.measureText(currentLine + " " + trimmed).width;
         if (lineWidth > totalWidth) {
-            x = 0;
             lines.push(currentLine);
             currentLine = "";
         }
