@@ -58,7 +58,7 @@ const SoundEffect = Object.freeze({
 });
 
 let gridContents = [];
-let validWords = [];
+let validWords = null;
 let gameState = GameState.GAME_OVER;
 let highlightList = [];
 let highlightedCells = {};
@@ -103,9 +103,9 @@ window.onload = function() {
 
     fetch('words.json')
         .then(response => response.json())
-        .then(response => validWords = response)
+        .then(response => validWords = new Set(response))
         .catch(error => {
-            alert("Error loading word list from server");
+            alert("Error loading word list from server: " + error);
         });
 
     context.fillStyle = "black";
@@ -277,24 +277,9 @@ function isValidWord(word) {
         return false;
     }
 
-    let low = 0;
-    let high = validWords.length - 1;
-
-    while (low <= high) {
-        const mid = Math.floor((low + high) / 2);
-        if (word == validWords[mid]) {
-            return true;
-        }
-
-        if (word > validWords[mid]) {
-            low = mid + 1;
-        } else {
-            high = mid - 1;
-        }
-    }
-
-    return false;
+    return validWords.has(word);
 }
+
 
 function generateRandomLetter() {
     const num = Math.random();
