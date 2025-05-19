@@ -122,10 +122,6 @@ window.onload = function() {
 
 function initAudio() {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
-
     const fileNames = Object.values(SoundEffect);
     const promises = fileNames.map(async (file) => {
         const response = await fetch(file);
@@ -246,10 +242,14 @@ function finishLevel() {
 }
 
 function playSound(name) {
-    const sourceNode = audioContext.createBufferSource();
-    sourceNode.buffer = audioBuffers[name];
-    sourceNode.connect(audioContext.destination);
-    sourceNode.start(0);
+    if (audioContext.state === 'running') {
+        const sourceNode = audioContext.createBufferSource();
+        sourceNode.buffer = audioBuffers[name];
+        sourceNode.connect(audioContext.destination);
+        sourceNode.start(0);
+    } else {
+        audioContext.resume().then(() => playSound(name));
+    }
 }
 
 function populateGrid() {
