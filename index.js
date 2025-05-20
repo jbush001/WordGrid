@@ -184,12 +184,17 @@ function handleMouseUp() {
 }
 
 function handleKeyDown(event) {
+    const linesNeeded = Math.min(level, NUM_ROWS + NUM_COLS);
     if (event.key === "Escape") {
         resetSelection();
         draw();
     } else if (event.key == "p" && gameState == GameState.PLAYING) {
         playSound(SoundEffect.PAUSE);
         pause();
+    } else if (event.key == "n" && gameState == GameState.PLAYING
+        && clearedLines >= linesNeeded) {
+        finishLevel();
+        draw();
     } else if (gameState == GameState.PAUSED) {
         unpause();
     }
